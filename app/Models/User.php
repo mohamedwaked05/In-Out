@@ -45,4 +45,19 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+    // app/Models/User.php
+public function employees()
+{
+    return $this->hasMany(User::class, 'manager_id');
+}
+
+public function manager()
+{
+    return $this->belongsTo(User::class, 'manager_id');
+}
+
+public function attendanceRecords()
+{
+    return $this->hasMany(AttendanceRecord::class);
+}
 }
