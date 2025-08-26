@@ -17,11 +17,14 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-    ];
+    // ... inside the User class ...
+protected $fillable = [
+    'name',
+    'email',
+    'password',
+    'role',
+    'manager_id'
+];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -38,13 +41,9 @@ class User extends Authenticatable
      *
      * @return array<string, string>
      */
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
-    }
+protected $casts = [
+    'recorded_at' => 'datetime',
+];
     // app/Models/User.php
 public function employees()
 {
