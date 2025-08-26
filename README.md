@@ -188,6 +188,4 @@ PRs are welcome! Please open an issue first to discuss significant changes.
 
 MIT
 
-🔥 Suggested Repo Tagline (one-liner)
 
-Photo-verified attendance tracking with role-based dashboards, built on Laravel.
