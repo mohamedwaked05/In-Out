@@ -1,61 +1,191 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+🚀 InOut — Photo-Verified Attendance System (Laravel)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A role-based attendance tracker where employees check in/out by taking a photo of their face. Managers get a clean dashboard to review daily activity and verify photo proof at a glance.
 
-## About Laravel
+Built with Laravel, Blade, and Bootstrap.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+✨ Key Features
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+👤 Employee Dashboard
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+One-tap Check-In / Check-Out with camera capture (HTML5 getUserMedia + Canvas → image upload)
 
-## Learning Laravel
+Photo proof stored securely and displayed as thumbnails
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Today’s history with time and photo
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+Modern, responsive UI
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+🧑‍💼 Manager Dashboard
 
-## Laravel Sponsors
+Team overview with all employees’ records for a selected date
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Visual verification of photo proofs
 
-### Premium Partners
+Quick stats (check-ins, check-outs, team size)
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+🔐 Security & Roles
 
-## Contributing
+Auth (Laravel), CSRF, input validation
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Role-based access (employee, manager)
 
-## Code of Conduct
+🗂 Storage & Files
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Photos saved to storage/app/public/...
 
-## Security Vulnerabilities
+Served via Storage::url() (symlinked to public/storage)
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Optional S3 support for production
 
-## License
+🖼️ How Photo Check-In Works (High Level)
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Employee clicks Check In / Check Out
+
+Browser opens camera via navigator.mediaDevices.getUserMedia
+
+A frame is captured to Canvas, converted to a Blob, and sent as a file input
+
+Backend validates & stores the image, then creates an attendance_records row:
+
+user_id, type (check_in / check_out), recorded_at, photo_path
+
+⚠️ Browser Requirement: Camera access requires HTTPS in production (works on http://localhost during development). Use SSL (Let’s Encrypt) on your domain.
+
+🛠 Tech Stack
+
+Backend: Laravel (PHP 8+)
+
+Frontend: Blade, Bootstrap 5, Font Awesome
+
+Database: MySQL
+
+Storage: Local public disk (or S3)
+
+Auth: Laravel Breeze / default auth scaffolding
+
+📂 Project Structure (Relevant)
+app/
+  Http/Controllers/
+    EmployeeController.php
+    ManagerController.php
+  Models/
+    AttendanceRecord.php
+    User.php
+resources/views/
+  employee/dashboard.blade.php    # camera capture + photo preview + actions
+  manager/dashboard.blade.php     # team view + stats + photo verification
+routes/web.php                    # role-based routes, dashboards, actions
+
+🚀 Getting Started
+1) Clone & Install
+git clone https://github.com/your-username/inout-attendance.git
+cd inout-attendance
+composer install
+npm install && npm run build
+
+2) Environment
+cp .env.example .env
+php artisan key:generate
+
+
+Set DB credentials in .env:
+
+APP_URL=https://your-domain.com   # important for Storage::url()
+DB_DATABASE=...
+DB_USERNAME=...
+DB_PASSWORD=...
+
+3) Migrate
+php artisan migrate
+
+4) Link Storage (for photo proof)
+php artisan storage:link
+
+5) Serve
+php artisan serve
+
+
+Visit: http://127.0.0.1:8000
+
+🔁 Core Routes (Examples)
+
+Adjust to your actual names; recommended dot-notation:
+
+GET   /employee/dashboard         -> employee.dashboard
+POST  /employee/check-in          -> employee.check.in
+POST  /employee/check-out         -> employee.check.out
+
+GET   /manager/dashboard          -> manager.dashboard
+
+
+In Blade:
+
+<form action="{{ route('employee.check.in') }}" method="POST" enctype="multipart/form-data">
+    @csrf
+    <!-- camera-driven file input filled by JS -->
+</form>
+
+✅ Validation & Storage (Controller Snippet)
+$request->validate([
+    'photo' => 'required|image|max:4096', // ~4MB
+]);
+
+$path = $request->file('photo')->store(
+    'attendance/'.auth()->id().'/'.now()->toDateString(),
+    'public'
+);
+
+AttendanceRecord::create([
+    'user_id'     => auth()->id(),
+    'type'        => 'check_in', // or check_out
+    'recorded_at' => now(),
+    'photo_path'  => $path,
+]);
+
+
+In views, display with:
+Storage::url($record->photo_path)
+
+🔒 Security Notes
+
+CSRF tokens on all forms
+
+Only authenticated users can access dashboards
+
+Role gate for manager area
+
+Validate uploaded images (MIME/size)
+
+Use HTTPS in production (required for camera)
+
+📸 Screenshots (Optional)
+docs/screenshots/employee-dashboard.png
+docs/screenshots/manager-dashboard.png
+
+
+Add images and reference them here to impress reviewers.
+
+🧭 Roadmap
+
+⏱️ Late / absence rules & alerts
+
+📊 Reports (CSV/PDF export, date ranges)
+
+☁️ S3 storage, image resizing
+
+🏢 Multi-tenant (per company), subscriptions
+
+🔄 CI/CD (GitHub Actions), staging/prod
+
+📱 PWA camera UX on mobile
+
+🤝 Contributing
+
+PRs are welcome! Please open an issue first to discuss significant changes.
+
+📜 License
+
+MIT
+
+
