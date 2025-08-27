@@ -108,6 +108,42 @@
             margin-bottom: 15px;
             color: #dee2e6;
         }
+
+        .photo-thumbnail {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            border: 2px solid #e9ecef;
+        }
+
+        .photo-thumbnail:hover {
+            transform: scale(1.05);
+            border-color: #4361ee;
+        }
+
+        .photo-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #4361ee;
+            color: white;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .photo-container {
+            position: relative;
+            display: inline-block;
+            margin: 5px;
+        }
     </style>
 </head>
 <body>
@@ -150,7 +186,7 @@
 
         <!-- Stats Overview -->
         <div class="row mb-4">
-            <div class="col-md-4 mb-3">
+            <div class="col-md-3 mb-3">
                 <div class="stats-card">
                     <div class="stats-number">
                         {{ $employees->sum(fn($e) => $e->attendanceRecords->where('type','check_in')->count()) }}
@@ -158,7 +194,7 @@
                     <div class="stats-label">Total Check-Ins Today</div>
                 </div>
             </div>
-            <div class="col-md-4 mb-3">
+            <div class="col-md-3 mb-3">
                 <div class="stats-card">
                     <div class="stats-number">
                         {{ $employees->sum(fn($e) => $e->attendanceRecords->where('type','check_out')->count()) }}
@@ -166,7 +202,15 @@
                     <div class="stats-label">Total Check-Outs Today</div>
                 </div>
             </div>
-            <div class="col-md-4 mb-3">
+            <div class="col-md-3 mb-3">
+                <div class="stats-card">
+                    <div class="stats-number">
+                        {{ $employees->sum(fn($e) => $e->attendanceRecords->where('photo_path', '!=', null)->count()) }}
+                    </div>
+                    <div class="stats-label">Photos Taken Today</div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
                 <div class="stats-card">
                     <div class="stats-number">{{ $employees->count() }}</div>
                     <div class="stats-label">Employees in Team</div>
@@ -193,7 +237,7 @@
             </div>
         </form>
 
-        <!-- Attendance Table -->
+        <!-- Attendance Records Table -->
         <div class="card dashboard-card">
             <div class="card-header bg-white py-3">
                 <h5 class="mb-0"><i class="fas fa-users me-2"></i>Your Team's Attendance</h5>
@@ -206,6 +250,7 @@
                                 <tr>
                                     <th>Employee</th>
                                     <th>Records ({{ request('date', today()->toDateString()) }})</th>
+                                    <th>Photos</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -216,7 +261,7 @@
                                             @if($employee->attendanceRecords->count())
                                                 <ul class="list-unstyled mb-0">
                                                     @foreach($employee->attendanceRecords as $record)
-                                                        <li>
+                                                        <li class="mb-2">
                                                             <span class="status-badge {{ $record->type === 'check_in' ? 'badge-checkin' : 'badge-checkout' }}">
                                                                 <i class="fas {{ $record->type === 'check_in' ? 'fa-sign-in-alt' : 'fa-sign-out-alt' }} me-1"></i>
                                                                 {{ ucfirst($record->type) }}
@@ -229,6 +274,32 @@
                                                 <em class="text-muted">No records for this date</em>
                                             @endif
                                         </td>
+                                        <td>
+                                            @if($employee->attendanceRecords->count())
+                                                <div class="d-flex flex-wrap">
+                                                    @foreach($employee->attendanceRecords as $record)
+                                                        @if($record->photo_path)
+                                                            <div class="photo-container">
+                                                                <span class="photo-badge">
+                                                                    {{ $record->type === 'check_in' ? 'IN' : 'OUT' }}
+                                                                </span>
+                                                                <img src="{{ asset('storage/' . $record->photo_path) }}"
+                                                                     alt="{{ $record->type }} photo"
+                                                                     class="photo-thumbnail"
+                                                                     onclick="showImageModal('{{ asset('storage/' . $record->photo_path) }}', '{{ $employee->name }} - {{ $record->type }} at {{ $record->recorded_at->format('h:i A') }}')">
+                                                            </div>
+                                                        @endif
+                                                    @endforeach
+                                                </div>
+                                                @if($employee->attendanceRecords->where('photo_path', null)->count())
+                                                    <small class="text-muted d-block mt-1">
+                                                        {{ $employee->attendanceRecords->where('photo_path', null)->count() }} records without photos
+                                                    </small>
+                                                @endif
+                                            @else
+                                                <em class="text-muted">No photos</em>
+                                            @endif
+                                        </td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -238,12 +309,46 @@
                     <div class="empty-state">
                         <i class="fas fa-user-slash"></i>
                         <h5>No employees assigned to you</h5>
+                        <p class="mb-0">Employees will appear here once assigned to your team.</p>
                     </div>
                 @endif
             </div>
         </div>
     </div>
 
+    <!-- Image Modal -->
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Attendance Photo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="modalImage" src="" class="img-fluid rounded" style="max-height: 70vh;">
+                </div>
+                <div class="modal-footer">
+                    <small class="text-muted me-auto" id="modalTimestamp"></small>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function showImageModal(imageUrl, title) {
+            document.getElementById('modalImage').src = imageUrl;
+            document.getElementById('modalTitle').textContent = title;
+
+            const modal = new bootstrap.Modal(document.getElementById('imageModal'));
+            modal.show();
+        }
+
+        // Auto-refresh the page every minute to update times
+        setTimeout(function() {
+            window.location.reload();
+        }, 60000);
+    </script>
 </body>
 </html>
