@@ -1,0 +1,51 @@
+# version: '3.8'
+
+services:
+  # PHP Apache Service
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: inout-app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+      - ./docker/apache.conf:/etc/apache2/sites-available/000-default.conf
+    ports:
+      - "8001:80"
+    networks:
+      - inout-network
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_DATABASE=inout_system
+      - DB_USERNAME=inout_user
+      - DB_PASSWORD=secret
+
+  # MySQL Service
+  db:
+    image: mysql:8.0
+    container_name: inout-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: inout_system
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_PASSWORD: secret
+      MYSQL_USER: inout_user
+    volumes:
+      - dbdata:/var/lib/mysql
+      - ./docker/mysql/my.cnf:/etc/mysql/conf.d/my.cnf
+    ports:
+      - "3307:3306"
+    networks:
+      - inout-network
+
+volumes:
+  dbdata:
+    driver: local
+
+networks:
+  inout-network:
+    driver: bridge
