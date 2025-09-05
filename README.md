@@ -79,8 +79,8 @@ routes/web.php                    # role-based routes, dashboards, actions
 
 🚀 Getting Started
 1) Clone & Install
-git clone https://github.com/your-username/inout-attendance.git
-cd inout-attendance
+git clone (https://github.com/mohamedwaked05/In-Out.git)
+cd in-out
 composer install
 npm install && npm run build
 
