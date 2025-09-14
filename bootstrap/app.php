@@ -24,12 +24,12 @@ return Application::configure(basePath: dirname(__DIR__))
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
 
-        // ADD THIS LINE:
+        
         'role' => \App\Http\Middleware\CheckRole::class,
     ]);
 
-    // ... rest of the code ...
+    
 })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        
     })->create();

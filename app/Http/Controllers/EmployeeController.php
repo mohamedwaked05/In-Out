@@ -6,14 +6,26 @@ use App\Models\User;
 use App\Models\AttendanceRecord;
 use App\Notifications\EmployeeAttendance;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth; 
 
 class EmployeeController extends Controller
 {
     public function dashboard()
     {
+        // Get the authenticated user - METHOD 1: Using Auth facade (most reliable)
+        $user = Auth::user();
+        
+        // For absolute type safety, check if user exists and is the right type
+        if (!$user instanceof User) {
+            // Handle the case where user is not authenticated or not the expected type
+            Auth::logout();
+            return redirect('/login');
+        }
+
         // Get today's records for the current user
-        $records = auth()->user()->attendanceRecords()
+        $records = $user->attendanceRecords()
             ->whereDate('recorded_at', today())
             ->latest()
             ->get();
@@ -33,37 +45,23 @@ class EmployeeController extends Controller
 
     private function processAttendance($type, Request $request)
     {
-        \Log::info("=== PROCESS ATTENDANCE STARTED ===");
-        \Log::info("Type: " . $type);
-
-        // DEBUG: Check file upload
-        \Log::info("Has file: " . ($request->hasFile('photo') ? 'Yes' : 'No'));
-        if ($request->hasFile('photo')) {
-            \Log::info("File name: " . $request->file('photo')->getClientOriginalName());
-            \Log::info("File size: " . $request->file('photo')->getSize());
-        }
-
-        // DEBUG: Check user and manager
-        $user = auth()->user();
-        \Log::info("User ID: " . $user->id);
-        \Log::info("User manager_id: " . $user->manager_id);
-
-        if ($user->manager_id) {
-            $manager = User::find($user->manager_id);
-            \Log::info("Manager exists: " . ($manager ? 'Yes' : 'No'));
-            if ($manager) {
-                \Log::info("Manager role: " . $manager->role);
-            }
+        // Get the authenticated user - METHOD 2: Using request()->user()
+        $user = $request->user();
+        
+        // Type check for safety
+        if (!$user instanceof User) {
+            Log::error("Process attendance failed: User not authenticated properly");
+            return redirect()->route('employee.dashboard')->with('error', 'Authentication error. Please try again.');
         }
 
         // Prevent multiple check-ins/outs in the same day
-        $alreadyRecorded = auth()->user()->attendanceRecords()
+        $alreadyRecorded = $user->attendanceRecords()
             ->whereDate('recorded_at', today())
             ->where('type', $type)
             ->exists();
 
         if ($alreadyRecorded) {
-            \Log::warning("Already recorded today: " . $type);
+            Log::warning("User #" . $user->id . " attempted to $type multiple times on " . today()->toDateString());
             return redirect()->route('employee.dashboard')->with('error', 'You have already ' . str_replace('_', ' ', $type) . ' today.');
         }
 
@@ -74,44 +72,32 @@ class EmployeeController extends Controller
 
         try {
             // Store the photo with a unique filename
-            $photoName = time() . '_' . auth()->id() . '_' . $type . '.' . $request->photo->extension();
+            $photoName = time() . '_' . $user->id . '_' . $type . '.' . $request->photo->extension();
             $photoPath = $request->file('photo')->storeAs('attendance', $photoName, 'public');
 
-            \Log::info("Photo stored: " . $photoPath);
-
             // Create attendance record
-            $attendanceRecord = auth()->user()->attendanceRecords()->create([
+            $attendanceRecord = $user->attendanceRecords()->create([
                 'type' => $type,
                 'recorded_at' => now(),
                 'photo_path' => $photoPath
             ]);
-            \Log::info("Attendance record created: " . $attendanceRecord->id);
 
             // NOTIFY THE MANAGER
-            \Log::info("Calling notifyManager...");
-            $this->notifyManager($type, $photoPath);
-            \Log::info("NotifyManager completed");
+            $this->notifyManager($user, $type, $photoPath);
 
             return redirect()->route('employee.dashboard')->with('success',
                 ucfirst(str_replace('_', ' ', $type)) . ' recorded successfully! Manager notified.');
 
         } catch (\Exception $e) {
-            \Log::error("Error in processAttendance: " . $e->getMessage());
+            Log::error("Error recording $type for User #" . $user->id . ": " . $e->getMessage());
             return redirect()->route('employee.dashboard')->with('error',
-                'Failed to record attendance: ' . $e->getMessage());
+                'Failed to record attendance. Please try again.');
         }
     }
 
-    private function notifyManager($type, $photoPath)
+    private function notifyManager(User $user, $type, $photoPath)
     {
-        \Log::info("NOTIFY MANAGER CALLED");
-        \Log::info("Type: " . $type . ", Photo: " . $photoPath);
-
-        $user = auth()->user();
-        \Log::info("User ID: " . $user->id);
-
         if ($user->manager) {
-            \Log::info("Manager found: " . $user->manager->id);
             try {
                 $user->manager->notify(new EmployeeAttendance(
                     $user->name,
@@ -119,12 +105,12 @@ class EmployeeController extends Controller
                     now(),
                     $photoPath
                 ));
-                \Log::info("Notification sent successfully!");
+                Log::info("Notification sent successfully to Manager #" . $user->manager->id . " for User #" . $user->id . "'s $type.");
             } catch (\Exception $e) {
-                \Log::error("Notification failed: " . $e->getMessage());
+                Log::error("Notification failed for User #" . $user->id . "'s $type: " . $e->getMessage());
             }
         } else {
-            \Log::warning("No manager found for user!");
+            Log::warning("No manager assigned for User #" . $user->id . ". Cannot send $type notification.");
         }
     }
 }

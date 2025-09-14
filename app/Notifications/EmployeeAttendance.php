@@ -26,7 +26,7 @@ class EmployeeAttendance extends Notification
 
     public function via($notifiable)
     {
-        return ['database']; // Can also add 'mail' if you want email notifications
+        return ['database'];
     }
 
     public function toDatabase($notifiable)

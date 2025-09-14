@@ -22,7 +22,7 @@ class AttendanceRecord extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'recorded_at' => 'datetime', // ← ADD THIS LINE
+        'recorded_at' => 'datetime',
     ];
 
     public function user()
