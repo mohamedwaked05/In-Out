@@ -9,7 +9,7 @@ use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
+
     use HasFactory, Notifiable;
 
     /**
@@ -17,13 +17,13 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
-protected $fillable = [
-    'name',
-    'email',
-    'password',
-    'role',
-    'manager_id'
-];
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+        'role',
+        'manager_id'
+    ];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -40,22 +40,28 @@ protected $fillable = [
      *
      * @return array<string, string>
      */
-protected $casts = [
-    'recorded_at' => 'datetime',
-];
+    protected function casts(): array 
+    {
+        return [ 
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed', // password hashing
+            
+        ];
+    }
+
     //relations
-public function employees()
-{
-    return $this->hasMany(User::class, 'manager_id');
-}
+    public function employees()
+    {
+        return $this->hasMany(User::class, 'manager_id');
+    }
 
-public function manager()
-{
-    return $this->belongsTo(User::class, 'manager_id');
-}
+    public function manager()
+    {
+        return $this->belongsTo(User::class, 'manager_id');
+    }
 
-public function attendanceRecords()
-{
-    return $this->hasMany(AttendanceRecord::class);
-}
+    public function attendanceRecords()
+    {
+        return $this->hasMany(AttendanceRecord::class);
+    }
 }

@@ -1,191 +1,103 @@
-🚀 InOut — Photo-Verified Attendance System (Laravel)
-
-A role-based attendance tracker where employees check in/out by taking a photo of their face. Managers get a clean dashboard to review daily activity and verify photo proof at a glance.
-
-Built with Laravel, Blade, and Bootstrap.
-
-✨ Key Features
-
-👤 Employee Dashboard
-
-One-tap Check-In / Check-Out with camera capture (HTML5 getUserMedia + Canvas → image upload)
-
-Photo proof stored securely and displayed as thumbnails
-
-Today’s history with time and photo
-
-Modern, responsive UI
-
-🧑‍💼 Manager Dashboard
-
-Team overview with all employees’ records for a selected date
-
-Visual verification of photo proofs
-
-Quick stats (check-ins, check-outs, team size)
-
-🔐 Security & Roles
-
-Auth (Laravel), CSRF, input validation
-
-Role-based access (employee, manager)
-
-🗂 Storage & Files
-
-Photos saved to storage/app/public/...
-
-Served via Storage::url() (symlinked to public/storage)
-
-Optional S3 support for production
-
-🖼️ How Photo Check-In Works (High Level)
-
-Employee clicks Check In / Check Out
-
-Browser opens camera via navigator.mediaDevices.getUserMedia
-
-A frame is captured to Canvas, converted to a Blob, and sent as a file input
-
-Backend validates & stores the image, then creates an attendance_records row:
-
-user_id, type (check_in / check_out), recorded_at, photo_path
-
-⚠️ Browser Requirement: Camera access requires HTTPS in production (works on http://localhost during development). Use SSL (Let’s Encrypt) on your domain.
-
-🛠 Tech Stack
-
-Backend: Laravel (PHP 8+)
-
-Frontend: Blade, Bootstrap 5, Font Awesome
-
-Database: MySQL
-
-Storage: Local public disk (or S3)
-
-Auth: Laravel Breeze / default auth scaffolding
-
-📂 Project Structure (Relevant)
-app/
-  Http/Controllers/
-    EmployeeController.php
-    ManagerController.php
-  Models/
-    AttendanceRecord.php
-    User.php
-resources/views/
-  employee/dashboard.blade.php    # camera capture + photo preview + actions
-  manager/dashboard.blade.php     # team view + stats + photo verification
-routes/web.php                    # role-based routes, dashboards, actions
-
-🚀 Getting Started
-1) Clone & Install
-git clone (https://github.com/mohamedwaked05/In-Out.git)
-cd in-out
-composer install
-npm install && npm run build
-
-2) Environment
-cp .env.example .env
-php artisan key:generate
-
-
-Set DB credentials in .env:
-
-APP_URL=https://your-domain.com   # important for Storage::url()
-DB_DATABASE=...
-DB_USERNAME=...
-DB_PASSWORD=...
-
-3) Migrate
-php artisan migrate
-
-4) Link Storage (for photo proof)
-php artisan storage:link
-
-5) Serve
-php artisan serve
-
-
-Visit: http://127.0.0.1:8000
-
-🔁 Core Routes (Examples)
-
-Adjust to your actual names; recommended dot-notation:
-
-GET   /employee/dashboard         -> employee.dashboard
-POST  /employee/check-in          -> employee.check.in
-POST  /employee/check-out         -> employee.check.out
-
-GET   /manager/dashboard          -> manager.dashboard
-
-
-In Blade:
-
-<form action="{{ route('employee.check.in') }}" method="POST" enctype="multipart/form-data">
-    @csrf
-    <!-- camera-driven file input filled by JS -->
-</form>
-
-✅ Validation & Storage (Controller Snippet)
-$request->validate([
-    'photo' => 'required|image|max:4096', // ~4MB
-]);
-
-$path = $request->file('photo')->store(
-    'attendance/'.auth()->id().'/'.now()->toDateString(),
-    'public'
-);
-
-AttendanceRecord::create([
-    'user_id'     => auth()->id(),
-    'type'        => 'check_in', // or check_out
-    'recorded_at' => now(),
-    'photo_path'  => $path,
-]);
-
-
-In views, display with:
-Storage::url($record->photo_path)
-
-🔒 Security Notes
-
-CSRF tokens on all forms
-
-Only authenticated users can access dashboards
-
-Role gate for manager area
-
-Validate uploaded images (MIME/size)
-
-Use HTTPS in production (required for camera)
-
-📸 Screenshots (Optional)
-docs/screenshots/employee-dashboard.png
-docs/screenshots/manager-dashboard.png
-
-
-Add images and reference them here to impress reviewers.
-
-🧭 Roadmap
-
-⏱️ Late / absence rules & alerts
-
-📊 Reports (CSV/PDF export, date ranges)
-
-☁️ S3 storage, image resizing
-
-🏢 Multi-tenant (per company), subscriptions
-
-🔄 CI/CD (GitHub Actions), staging/prod
-
-📱 PWA camera UX on mobile
-
-🤝 Contributing
-
-PRs are welcome! Please open an issue first to discuss significant changes.
-
-📜 License
-
-MIT
-
-
+# Employee Attendance System
+
+A robust Laravel-based web application for managing employee check-ins and check-outs with photo verification and role-based dashboards for managers and employees.
+
+## 🚀 Features
+
+-   **Role-Based Access Control (RBAC):** Separate dashboards for Employees and Managers.
+-   **Photo Verification:** Employees must take a picture for both check-in and check-out.
+-   **Manager Notifications:** Managers receive real-time notifications when employees clock in/out.
+-   **Attendance History:** Managers can view their team's attendance records for any given day.
+-   **Secure Authentication:** Built on Laravel Breeze with session authentication, CSRF protection, and password hashing.
+-   **Docker Support:** Ready for containerized development and deployment.
+
+## 🛠️ Built With
+
+-   **Backend Framework:** [Laravel 12](https://laravel.com)
+-   **Authentication:** [Laravel Breeze](https://laravel.com/docs/starter-kits#breeze)
+-   **Frontend:** Blade Templating, Tailwind CSS
+-   **Database:** MySQL
+-   **Containerization:** Docker
+
+## 📋 Prerequisites
+
+Before you begin, ensure you have the following installed on your machine:
+-   **Docker** and **Docker Compose**
+-   **Git**
+-   **Composer** (if not using Docker for PHP)
+
+## ⚡ Quick Installation
+
+1.  **Clone the repository:**
+    ```bash
+    git clone <your-repository-url>
+    cd employee-attendance-system
+    ```
+
+2.  **Copy the environment file:**
+    ```bash
+    cp .env.example .env
+    ```
+    *Edit the `.env` file to set your database credentials (`DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`) and application `APP_KEY`.*
+
+3.  **Start the Docker containers:**
+    ```bash
+    ./vendor/bin/sail up -d
+    ```
+    *or if using local Composer:*
+    ```bash
+    docker-compose up -d
+    ```
+
+4.  **Install PHP dependencies:**
+    ```bash
+    ./vendor/bin/sail composer install
+    ```
+
+5.  **Generate the application key:**
+    ```bash
+    ./vendor/bin/sail artisan key:generate
+    ```
+
+6.  **Run database migrations & seeders:**
+    ```bash
+    ./vendor/bin/sail artisan migrate --seed
+    ```
+
+7.  **Visit the application:**
+    Open your browser and go to `http://localhost`.
+
+## 👥 Default Users
+
+After seeding, the following test users are created:
+
+1.  **Manager Account:**
+    -   **Email:** manager@example.com
+    -   **Password:** password
+    -   **Role:** Manager (Can view all employee dashboards)
+
+2.  **Employee Account:**
+    -   **Email:** employee@example.com
+    -   **Password:** password
+    -   **Role:** Employee (Can check-in/out, reports to the manager)
+
+## 🗄️ Database Schema
+
+### Key Tables:
+-   **`users`:** Stores all users (employees and managers). Managers have a `null` `manager_id`.
+-   **`attendance_records`:** Stores each check-in/out event with a timestamp and photo path.
+-   **`notifications`:** Stores in-app notifications for managers.
+
+### Relationships:
+-   A `User` (manager) `hasMany` `User` (employees).
+-   An `Employee` `belongsTo` a `User` (manager).
+-   A `User` `hasMany` `AttendanceRecord`s.
+-   An `AttendanceRecord` `belongsTo` a `User`.
+
+## 🧪 Running Tests
+
+Execute the test suite with the following command:
+```bash
+./vendor/bin/sail test
+# or
+./vendor/bin/sail artisan test

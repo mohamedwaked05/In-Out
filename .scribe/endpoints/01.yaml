@@ -1,0 +1,57 @@
+name: 'Employee Attendance'
+description: ''
+endpoints:
+  -
+    httpMethods:
+      - POST
+    uri: employee/check-in
+    metadata:
+      groupName: 'Employee Attendance'
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Check In for the day'
+      description: ''
+      authenticated: false
+      deprecated: false
+      custom: []
+    headers:
+      Content-Type: multipart/form-data
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      photo:
+        name: photo
+        description: 'The selfie photo for check-in verification.'
+        required: true
+        example: null
+        type: file
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        custom: []
+    cleanBodyParameters: []
+    fileParameters:
+      photo: null
+    responses:
+      -
+        status: 302
+        content: 'redirect Redirects to dashboard with success message'
+        headers: []
+        description: ''
+        custom: []
+      -
+        status: 302
+        content: 'redirect Redirects to dashboard with error if already checked in'
+        headers: []
+        description: ''
+        custom: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+    custom: []

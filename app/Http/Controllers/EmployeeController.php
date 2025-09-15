@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth; 
+use  Illuminate\support\str;
 
 class EmployeeController extends Controller
 {
@@ -32,7 +33,15 @@ class EmployeeController extends Controller
 
         return view('employee.dashboard', compact('records'));
     }
-
+    /**
+ * @group Employee Attendance
+ * 
+ * Check In for the day
+ * 
+ * @bodyParam photo file required The selfie photo for check-in verification.
+ * @response 302 redirect Redirects to dashboard with success message
+ * @response 302 redirect Redirects to dashboard with error if already checked in
+ */
     public function checkIn(Request $request)
     {
         return $this->processAttendance('check_in', $request);
@@ -71,8 +80,10 @@ class EmployeeController extends Controller
         ]);
 
         try {
-            // Store the photo with a unique filename
-            $photoName = time() . '_' . $user->id . '_' . $type . '.' . $request->photo->extension();
+             // Store the photo with a unique filename
+            // Create a safe filename: timestamp_userid_type.extension
+            $baseName = time() . '_' . $user->id . '_' . $type;
+            $photoName = Str::slug($baseName) . '.' . $request->photo->extension(); 
             $photoPath = $request->file('photo')->storeAs('attendance', $photoName, 'public');
 
             // Create attendance record
@@ -94,7 +105,15 @@ class EmployeeController extends Controller
                 'Failed to record attendance. Please try again.');
         }
     }
-
+  /**
+ * @group Employee Attendance
+ * 
+ * Check Out for the day
+ * 
+ * @bodyParam photo file required The selfie photo for check-out verification.
+ * @response 302 redirect Redirects to dashboard with success message
+ * @response 302 redirect Redirects to dashboard with error if already checked out or no check-in found
+ */
     private function notifyManager(User $user, $type, $photoPath)
     {
         if ($user->manager) {
