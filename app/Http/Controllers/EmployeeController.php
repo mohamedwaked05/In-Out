@@ -15,7 +15,7 @@ class EmployeeController extends Controller
 {
     public function dashboard()
     {
-        // Get the authenticated user - METHOD 1: Using Auth facade (most reliable)
+        // Get the authenticated user using Auth facade
         $user = Auth::user();
         
         // For absolute type safety, check if user exists and is the right type
@@ -33,19 +33,12 @@ class EmployeeController extends Controller
 
         return view('employee.dashboard', compact('records'));
     }
-    /**
- * @group Employee Attendance
- * 
- * Check In for the day
- * 
- * @bodyParam photo file required The selfie photo for check-in verification.
- * @response 302 redirect Redirects to dashboard with success message
- * @response 302 redirect Redirects to dashboard with error if already checked in
- */
+    
     public function checkIn(Request $request)
     {
         return $this->processAttendance('check_in', $request);
     }
+    
 
     public function checkOut(Request $request)
     {
@@ -105,15 +98,6 @@ class EmployeeController extends Controller
                 'Failed to record attendance. Please try again.');
         }
     }
-  /**
- * @group Employee Attendance
- * 
- * Check Out for the day
- * 
- * @bodyParam photo file required The selfie photo for check-out verification.
- * @response 302 redirect Redirects to dashboard with success message
- * @response 302 redirect Redirects to dashboard with error if already checked out or no check-in found
- */
     private function notifyManager(User $user, $type, $photoPath)
     {
         if ($user->manager) {

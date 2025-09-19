@@ -17,11 +17,10 @@ Route::get('/dashboard', function () {
         : redirect()->route('employee.dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-// Employee Routes - protected by auth and verification
-Route::middleware(['auth', 'verified'])->name('employee.')->group(function () {
+Route::middleware(['auth:api.token'])->name('employee.')->group(function () {
     Route::get('/employee/dashboard', [EmployeeController::class, 'dashboard'])->name('dashboard');
-    Route::post('/employee/check-in', [EmployeeController::class, 'checkIn'])->name('check-in');  // Changed to 'check-in'
-    Route::post('/employee/check-out', [EmployeeController::class, 'checkOut'])->name('check-out'); // Changed to 'check-out'
+    Route::post('/employee/check-in', [EmployeeController::class, 'checkIn'])->name('check-in');
+    Route::post('/employee/check-out', [EmployeeController::class, 'checkOut'])->name('check-out');
 });
 
 // Manager Routes - protected by auth, verification, and role middleware

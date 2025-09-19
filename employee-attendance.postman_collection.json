@@ -1,0 +1,72 @@
+{
+  "info": {
+    "name": "Employee Attendance API",
+    "description": "API for employee check-in and check-out operations with photo verification",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Check In",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "photo",
+              "type": "file",
+              "description": "Photo for check-in verification"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/employee/check-in",
+          "host": ["{{base_url}}"],
+          "path": ["employee", "check-in"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Check Out",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "photo",
+              "type": "file",
+              "description": "Photo for check-out verification"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/employee/check-out",
+          "host": ["{{base_url}}"],
+          "path": ["employee", "check-out"]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://in-out.test",
+      "type": "string"
+    }
+  ]
+}
