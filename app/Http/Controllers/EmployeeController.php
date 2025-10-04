@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth; 
-use  Illuminate\support\str;
+use Illuminate\Support\Str;
 
 class EmployeeController extends Controller
 {
@@ -67,17 +67,19 @@ class EmployeeController extends Controller
             return redirect()->route('employee.dashboard')->with('error', 'You have already ' . str_replace('_', ' ', $type) . ' today.');
         }
 
-        // Validate the photo
-        $request->validate([
-            'photo' => ['required', 'image', 'max:5120', 'mimes:jpg,jpeg,png']
-        ]);
-
         try {
-             // Store the photo with a unique filename
-            // Create a safe filename: timestamp_userid_type.extension
-            $baseName = time() . '_' . $user->id . '_' . $type;
-            $photoName = Str::slug($baseName) . '.' . $request->photo->extension(); 
-            $photoPath = $request->file('photo')->storeAs('attendance', $photoName, 'public');
+            $photoPath = null;
+
+            // Handle both file upload and base64 data
+            if ($request->hasFile('photo')) {
+                // Traditional file upload
+                $photoPath = $this->handleFileUpload($request->file('photo'), $user, $type);
+            } elseif ($request->has('photo_data')) {
+                // Base64 image from camera
+                $photoPath = $this->handleBase64Image($request->input('photo_data'), $user, $type);
+            } else {
+                return redirect()->route('employee.dashboard')->with('error', 'Please provide a photo.');
+            }
 
             // Create attendance record
             $attendanceRecord = $user->attendanceRecords()->create([
@@ -98,6 +100,58 @@ class EmployeeController extends Controller
                 'Failed to record attendance. Please try again.');
         }
     }
+
+    private function handleBase64Image($base64Data, User $user, $type)
+{
+    try {
+        // Remove data URL prefix if present
+        if (strpos($base64Data, 'data:image') === 0) {
+            $base64Data = preg_replace('/^data:image\/\w+;base64,/', '', $base64Data);
+        }
+        
+        $imageBinary = base64_decode($base64Data);
+        
+        if ($imageBinary === false) {
+            throw new \Exception('Invalid base64 image data');
+        }
+
+        // Validate it's actually an image
+        if (!@imagecreatefromstring($imageBinary)) {
+            throw new \Exception('Invalid image data');
+        }
+        
+        $photoName = time() . '_' . $user->id . '_' . $type . '.jpg';
+        $photoPath = 'attendance/' . $photoName;
+        
+        Storage::disk('public')->put($photoPath, $imageBinary);
+        
+        return $photoPath;
+
+    } catch (\Exception $e) {
+        Log::error("Base64 image processing failed for user #{$user->id}: " . $e->getMessage());
+        throw new \Exception('Failed to process image: ' . $e->getMessage());
+    }
+}
+
+    private function handleFileUpload($file, User $user, $type)
+    {
+        try {
+            // Validate the photo file
+            $validated = validator(['photo' => $file], [
+                'photo' => ['required', 'image', 'max:5120', 'mimes:jpg,jpeg,png']
+            ])->validate();
+
+            $baseName = time() . '_' . $user->id . '_' . $type;
+            $photoName = Str::slug($baseName) . '.' . $file->extension(); 
+            
+            return $file->storeAs('attendance', $photoName, 'public');
+
+        } catch (\Exception $e) {
+            Log::error("File upload failed for user #{$user->id}: " . $e->getMessage());
+            throw new \Exception('Failed to upload file: ' . $e->getMessage());
+        }
+    }
+
     private function notifyManager(User $user, $type, $photoPath)
     {
         if ($user->manager) {

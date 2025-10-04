@@ -17,11 +17,16 @@ Route::get('/dashboard', function () {
         : redirect()->route('employee.dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-
+// Employee Routes - protected by auth and verification
+Route::middleware(['auth', 'verified'])->prefix('employee')->name('employee.')->group(function () {
+    Route::get('/dashboard', [EmployeeController::class, 'dashboard'])->name('dashboard');
+    Route::post('/check-in', [EmployeeController::class, 'checkIn'])->name('check-in');
+    Route::post('/check-out', [EmployeeController::class, 'checkOut'])->name('check-out');
+});
 
 // Manager Routes - protected by auth, verification, and role middleware
-Route::middleware(['auth', 'verified', 'role:manager'])->name('manager.')->group(function () {
-    Route::get('/manager/dashboard', [ManagerController::class, 'dashboard'])->name('dashboard');
+Route::middleware(['auth', 'verified', 'role:manager'])->prefix('manager')->name('manager.')->group(function () {
+    Route::get('/dashboard', [ManagerController::class, 'dashboard'])->name('dashboard');
 });
 
 // Profile routes (accessible to all authenticated users regardless of role)
@@ -33,3 +38,4 @@ Route::middleware('auth')->group(function () {
 
 // Include authentication routes (login, register, password reset)
 require __DIR__.'/auth.php';
+    

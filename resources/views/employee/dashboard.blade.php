@@ -156,6 +156,37 @@
             margin-bottom: 15px;
             color: #dee2e6;
         }
+
+        /* New Camera Interface Styles */
+        .camera-interface {
+            margin-bottom: 15px;
+        }
+
+        .camera-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .camera-controls .btn {
+            flex: 1;
+        }
+
+        #photo-preview {
+            max-width: 100%;
+            border-radius: 8px;
+            border: 2px solid #4361ee;
+        }
+
+        .photo-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .photo-actions .btn {
+            flex: 1;
+        }
     </style>
 </head>
 <body>
@@ -286,42 +317,100 @@
             </div>
 
             <div class="col-lg-4">
-                <!-- Check-in/Check-out Panel -->
-                <div class="card dashboard-card mb-4">
-                    <div class="card-header bg-white py-3">
-                        <h5 class="mb-0"><i class="fas fa-camera me-2"></i>Attendance Actions</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="d-grid gap-2">
-                            <!-- Check-in Form -->
-                            <form action="{{ route('employee.check-in') }}" method="POST" enctype="multipart/form-data" id="checkInForm">
-                                @csrf
-                                <input type="file" name="photo" id="checkInPhoto" accept="image/*" class="d-none" onchange="previewImage(this, 'checkIn')">
-                                <button type="button" onclick="openCamera('checkIn')" class="btn btn-checkin attendance-btn w-100 mb-3">
-                                    <i class="fas fa-sign-in-alt me-2"></i> Check In
-                                </button>
-                                <div id="checkInPreview" class="mt-2 d-none text-center">
-                                    <img id="checkInPreviewImg" class="img-thumbnail mb-2" style="max-width: 100px; max-height: 100px;">
-                                    <button type="submit" class="btn btn-primary btn-sm w-100">Confirm Check-In</button>
-                                </div>
-                            </form>
-
-                            <!-- Check-out Form -->
-                            <form action="{{ route('employee.check-out') }}" method="POST" enctype="multipart/form-data" id="checkOutForm">
-                                @csrf
-                                <input type="file" name="photo" id="checkOutPhoto" accept="image/*" class="d-none" onchange="previewImage(this, 'checkOut')">
-                                <button type="button" onclick="openCamera('checkOut')" class="btn btn-checkout attendance-btn w-100">
-                                    <i class="fas fa-sign-out-alt me-2"></i> Check Out
-                                </button>
-                                <div id="checkOutPreview" class="mt-2 d-none text-center">
-                                    <img id="checkOutPreviewImg" class="img-thumbnail mb-2" style="max-width: 100px; max-height: 100px;">
-                                    <button type="submit" class="btn btn-primary btn-sm w-100">Confirm Check-Out</button>
-                                </div>
-                            </form>
-                        </div>
+              <!-- Check-in/Check-out Panel -->
+<div class="card dashboard-card mb-4">
+    <div class="card-header bg-white py-3">
+        <h5 class="mb-0"><i class="fas fa-camera me-2"></i>Attendance Actions</h5>
+    </div>
+    <div class="card-body">
+        <!-- Check-in Section -->
+        <div class="text-center mb-4 p-4 border rounded bg-light">
+            <h6 class="text-success mb-3">
+                <i class="fas fa-sign-in-alt me-2"></i>Check In
+            </h6>
+            
+            <!-- Camera Interface -->
+            <div id="checkIn-interface">
+                <div class="mb-3">
+                    <video id="checkIn-video" width="100%" height="300" autoplay class="border rounded d-none"></video>
+                    <canvas id="checkIn-canvas" class="d-none"></canvas>
+                </div>
+                
+                <div class="camera-controls">
+                    <button type="button" id="checkIn-start-btn" class="btn btn-success btn-lg py-3" style="font-size: 1.2rem;">
+                        <i class="fas fa-camera me-2"></i> START CAMERA FOR CHECK-IN
+                    </button>
+                    <button type="button" id="checkIn-capture-btn" class="btn btn-primary btn-lg py-3 d-none" style="font-size: 1.2rem;">
+                        <i class="fas fa-camera me-2"></i> CAPTURE CHECK-IN PHOTO
+                    </button>
+                </div>
+                
+                <!-- Preview -->
+                <div id="checkIn-preview" class="mt-3 d-none">
+                    <img id="checkIn-preview-img" class="img-thumbnail w-100 border-success">
+                    <div class="mt-2">
+                        <button type="submit" form="checkInForm" class="btn btn-success btn-lg w-100 py-3">
+                            <i class="fas fa-check-circle me-2"></i> CONFIRM CHECK-IN
+                        </button>
+                        <button type="button" id="checkIn-retake-btn" class="btn btn-outline-warning w-100 mt-2">
+                            <i class="fas fa-redo me-2"></i> RETAKE PHOTO
+                        </button>
                     </div>
                 </div>
+            </div>
+        </div>
 
+        <hr>
+
+        <!-- Check-out Section -->
+        <div class="text-center p-4 border rounded bg-light">
+            <h6 class="text-danger mb-3">
+                <i class="fas fa-sign-out-alt me-2"></i>Check Out
+            </h6>
+            
+            <!-- Camera Interface -->
+            <div id="checkOut-interface">
+                <div class="mb-3">
+                    <video id="checkOut-video" width="100%" height="300" autoplay class="border rounded d-none"></video>
+                    <canvas id="checkOut-canvas" class="d-none"></canvas>
+                </div>
+                
+                <div class="camera-controls">
+                    <button type="button" id="checkOut-start-btn" class="btn btn-danger btn-lg py-3" style="font-size: 1.2rem;">
+                        <i class="fas fa-camera me-2"></i> START CAMERA FOR CHECK-OUT
+                    </button>
+                    <button type="button" id="checkOut-capture-btn" class="btn btn-primary btn-lg py-3 d-none" style="font-size: 1.2rem;">
+                        <i class="fas fa-camera me-2"></i> CAPTURE CHECK-OUT PHOTO
+                    </button>
+                </div>
+                
+                <!-- Preview -->
+                <div id="checkOut-preview" class="mt-3 d-none">
+                    <img id="checkOut-preview-img" class="img-thumbnail w-100 border-danger">
+                    <div class="mt-2">
+                        <button type="submit" form="checkOutForm" class="btn btn-success btn-lg w-100 py-3">
+                            <i class="fas fa-check-circle me-2"></i> CONFIRM CHECK-OUT
+                        </button>
+                        <button type="button" id="checkOut-retake-btn" class="btn btn-outline-warning w-100 mt-2">
+                            <i class="fas fa-redo me-2"></i> RETAKE PHOTO
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden Forms -->
+        <form action="{{ route('employee.check-in') }}" method="POST" id="checkInForm">
+            @csrf
+            <input type="hidden" name="photo_data" id="checkIn-photo-data">
+        </form>
+
+        <form action="{{ route('employee.check-out') }}" method="POST" id="checkOutForm">
+            @csrf
+            <input type="hidden" name="photo_data" id="checkOut-photo-data">
+        </form>
+    </div>
+</div>
                 <!-- Quick Stats -->
                 <div class="card dashboard-card">
                     <div class="card-header bg-white py-3">
@@ -347,111 +436,133 @@
         </div>
     </div>
 
-    <!-- Camera Modal -->
-    <div class="modal fade" id="cameraModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-camera me-2"></i>Take Photo</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body text-center">
-                    <video id="video" width="100%" autoplay></video>
-                    <canvas id="canvas" class="d-none"></canvas>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="capturePhoto()">
-                        <i class="fas fa-camera me-1"></i> Capture
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        let currentFormType = '';
-        let stream = null;
+    // Simple Camera Handler
+class SimpleCamera {
+    constructor(type) {
+        this.type = type;
+        this.video = document.getElementById(`${type}-video`);
+        this.canvas = document.getElementById(`${type}-canvas`);
+        this.previewImg = document.getElementById(`${type}-preview-img`);
+        this.photoData = document.getElementById(`${type}-photo-data`);
+        
+        this.startBtn = document.getElementById(`${type}-start-btn`);
+        this.captureBtn = document.getElementById(`${type}-capture-btn`);
+        this.retakeBtn = document.getElementById(`${type}-retake-btn`);
+        this.preview = document.getElementById(`${type}-preview`);
+        
+        this.stream = null;
+        this.init();
+    }
 
-        function openCamera(formType) {
-            currentFormType = formType;
-            const modal = new bootstrap.Modal(document.getElementById('cameraModal'));
-            modal.show();
+    init() {
+        this.startBtn.addEventListener('click', () => this.startCamera());
+        this.captureBtn.addEventListener('click', () => this.capturePhoto());
+        this.retakeBtn.addEventListener('click', () => this.retakePhoto());
+    }
 
-            // Access camera
-            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                navigator.mediaDevices.getUserMedia({ video: true })
-                    .then(function(videoStream) {
-                        stream = videoStream;
-                        document.getElementById('video').srcObject = videoStream;
-                    })
-                    .catch(function(error) {
-                        console.error('Camera error:', error);
-                        // Fallback: open file input
-                        document.getElementById(formType + 'Photo').click();
-                    });
-            } else {
-                // Fallback for browsers without camera access
-                document.getElementById(formType + 'Photo').click();
-            }
-        }
+    async startCamera() {
+        try {
+            // Show loading state
+            this.startBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> ACCESSING CAMERA...';
+            this.startBtn.disabled = true;
 
-        function capturePhoto() {
-            const video = document.getElementById('video');
-            const canvas = document.getElementById('canvas');
-            const context = canvas.getContext('2d');
-
-            // Set canvas dimensions to video dimensions
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-
-            // Draw current video frame to canvas
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            // Convert canvas to blob and create file
-            canvas.toBlob(function(blob) {
-                const file = new File([blob], 'photo.jpg', { type: 'image/jpeg' });
-
-                // Create a DataTransfer object to simulate file input
-                const dataTransfer = new DataTransfer();
-                dataTransfer.items.add(file);
-
-                // Set the file to the appropriate input
-                const input = document.getElementById(currentFormType + 'Photo');
-                input.files = dataTransfer.files;
-
-                // Trigger preview
-                previewImage(input, currentFormType);
-
-                // Stop camera stream
-                if (stream) {
-                    stream.getTracks().forEach(track => track.stop());
-                }
-
-                // Close modal
-                bootstrap.Modal.getInstance(document.getElementById('cameraModal')).hide();
-            }, 'image/jpeg');
-        }
-
-        function previewImage(input, formType) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById(formType + 'PreviewImg').src = e.target.result;
-                    document.getElementById(formType + 'Preview').classList.remove('d-none');
-                }
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        // Auto-dismiss alerts after 5 seconds
-        setTimeout(() => {
-            const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(alert => {
-                bootstrap.Alert.getOrCreateInstance(alert).close();
+            // Try to access camera
+            this.stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
+                    facingMode: 'user'
+                } 
             });
-        }, 5000);
+
+            // Success - show video
+            this.video.srcObject = this.stream;
+            this.video.classList.remove('d-none');
+            this.startBtn.classList.add('d-none');
+            this.captureBtn.classList.remove('d-none');
+
+        } catch (err) {
+            console.error('Camera error:', err);
+            this.handleCameraError(err);
+        }
+    }
+
+    capturePhoto() {
+        if (!this.stream) return;
+
+        // Draw video frame to canvas
+        const context = this.canvas.getContext('2d');
+        this.canvas.width = this.video.videoWidth;
+        this.canvas.height = this.video.videoHeight;
+        context.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
+
+        // Convert to base64
+        const imageData = this.canvas.toDataURL('image/jpeg', 0.8);
+        
+        // Show preview
+        this.previewImg.src = imageData;
+        this.photoData.value = imageData;
+        
+        // Update UI
+        this.video.classList.add('d-none');
+        this.captureBtn.classList.add('d-none');
+        this.preview.classList.remove('d-none');
+
+        // Stop camera
+        this.stopCamera();
+    }
+
+    retakePhoto() {
+        // Reset UI
+        this.preview.classList.add('d-none');
+        this.startBtn.classList.remove('d-none');
+        this.startBtn.innerHTML = '<i class="fas fa-camera me-2"></i> START CAMERA FOR ' + (this.type === 'checkIn' ? 'CHECK-IN' : 'CHECK-OUT');
+        this.startBtn.disabled = false;
+        
+        // Clear data
+        this.photoData.value = '';
+    }
+
+    stopCamera() {
+        if (this.stream) {
+            this.stream.getTracks().forEach(track => track.stop());
+            this.stream = null;
+        }
+    }
+
+    handleCameraError(err) {
+        this.startBtn.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i> CAMERA ERROR - CLICK TO RETRY';
+        this.startBtn.disabled = false;
+        
+        let errorMsg = 'Camera access denied. ';
+        
+        if (err.name === 'NotAllowedError') {
+            errorMsg += 'Please allow camera permissions in your browser.';
+        } else if (err.name === 'NotFoundError') {
+            errorMsg += 'No camera found on your device.';
+        } else {
+            errorMsg += 'Error: ' + err.message;
+        }
+        
+        alert(errorMsg);
+    }
+}
+
+// Initialize cameras when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    new SimpleCamera('checkIn');
+    new SimpleCamera('checkOut');
+});
+
+// Auto-dismiss alerts
+setTimeout(() => {
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        bootstrap.Alert.getOrCreateInstance(alert).close();
+    });
+}, 5000);
     </script>
 </body>
 </html>
