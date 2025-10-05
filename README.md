@@ -1,4 +1,7 @@
 Employee Attendance System with Photo Verification
+
+
+
 https://img.shields.io/badge/Laravel-12.x-FF2D20?style=for-the-badge&logo=laravel
 https://img.shields.io/badge/PHP-8.4-777BB4?style=for-the-badge&logo=php
 https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql
