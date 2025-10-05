@@ -59,7 +59,7 @@ text
 └── # Notification Layer
     ├── Manager Alerts
     └── Activity Logging
-🛠️ Technical Stack
+# Technical Stack
 Backend
 Laravel 12.x - Modern PHP framework
 
